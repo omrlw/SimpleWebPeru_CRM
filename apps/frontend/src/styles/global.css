@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  --swp-primary: #275efe;
+  --swp-primary-hover: #1d4dee;
+  --swp-primary-soft: #e8edff;
+  --swp-dark: #0f172a;
+  --swp-light: #ffffff;
+  --swp-accent: #38bdf8;
+  --swp-muted-bg: #f4f7ff;
+  --swp-muted-border: #e4e8f8;
+  --swp-muted-card: #eef2ff;
+}
+
+body {
+  background-color: var(--swp-muted-bg);
+  color: var(--swp-dark);
+  font-family: "Inter", sans-serif;
+  font-feature-settings: "cv11", "cv05";
+}
+
+a {
+  color: var(--swp-primary);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  border: 1px solid var(--swp-muted-border);
+  padding: 0.35rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #fff;
+  color: rgba(15, 23, 42, 0.65);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.chip:hover {
+  background-color: var(--swp-muted-card);
+}
+
+.chip.active {
+  background-color: var(--swp-primary);
+  border-color: transparent;
+  color: #fff;
+}
+
+.bg-slate-50 {
+  background-color: var(--swp-muted-card) !important;
+}
+
+.bg-slate-100,
+.hover\:bg-slate-100:hover {
+  background-color: #eff5ff !important;
+}
+
+.bg-slate-200 {
+  background-color: #dce8ff !important;
+}
+
+.border-slate-200 {
+  border-color: var(--swp-muted-border) !important;
+}
+
+.border-slate-300 {
+  border-color: var(--swp-muted-border) !important;
+}
+
+.text-slate-500 {
+  color: rgba(30, 41, 59, 0.65) !important;
+}
+
+.text-slate-400 {
+  color: rgba(30, 41, 59, 0.5) !important;
+}
+
+.text-slate-600 {
+  color: rgba(30, 41, 59, 0.8) !important;
+}
+
+.text-slate-700 {
+  color: rgba(30, 41, 59, 0.9) !important;
+}
+
+.text-slate-800 {
+  color: var(--swp-dark) !important;
+}
+
+.page-content {
+  animation: fade-in 0.35s ease-in-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.k-card {
+  touch-action: none;
+}
