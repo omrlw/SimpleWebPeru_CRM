@@ -1,5 +1,8 @@
 require('dotenv').config();
 
+// Ensure Node.js runtime uses the Peru time zone by default
+process.env.TZ = process.env.TZ || 'America/Lima';
+
 const createApp = require('./app');
 const { initializeDatabase } = require('./config/database');
 

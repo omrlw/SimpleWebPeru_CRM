@@ -12,9 +12,12 @@ import {
     Search,
     Filter,
     CalendarRange,
+    Calendar,
+    Phone,
     DollarSign,
     ClipboardCheck,
     UserCheck,
+    FileText,
     Users as UsersIcon,
     Loader2,
     X,
@@ -79,6 +82,86 @@ const TASK_STATUS_OPTIONS = [
     { value: 'completada', label: 'Completada' },
     { value: 'cerrada', label: 'Cerrada' },
 ];
+
+const QUICK_TASK_OPTIONS = [
+    {
+        value: 'call',
+        label: 'Llamar',
+        title: 'Registrar llamada',
+        defaultTitle: 'Llamada de seguimiento',
+        icon: Phone,
+    },
+    {
+        value: 'meeting',
+        label: 'Reunión',
+        title: 'Agendar reunión',
+        defaultTitle: 'Reunión con cliente',
+        icon: Calendar,
+    },
+    {
+        value: 'proposal',
+        label: 'Enviar propuesta',
+        title: 'Preparar propuesta',
+        defaultTitle: 'Enviar propuesta comercial',
+        icon: FileText,
+    },
+    {
+        value: 'other',
+        label: 'Otra tarea',
+        title: 'Nueva tarea',
+        defaultTitle: '',
+        icon: ListTodo,
+    },
+];
+
+const QUICK_TASK_NOTE_PLACEHOLDERS = {
+    call: 'Notas rápidas de la llamada.',
+    meeting: 'Agenda o acuerdos a revisar.',
+    proposal: 'Qué enviarás y a quién.',
+    other: 'Puntos clave para recordar.',
+};
+
+const QUICK_TASK_DUE_OPTIONS = [
+    { value: 'today', label: 'Hoy', withIcon: true },
+    { value: 'tomorrow', label: 'Mañana' },
+    { value: 'next-week', label: 'Próx. Semana' },
+    { value: 'none', label: 'Sin fecha' },
+    { value: 'specific', label: 'Elegir fecha' },
+];
+
+const toLocalDateTimeString = (date) => {
+    const pad = (number) => String(number).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(
+        date.getMinutes()
+    )}`;
+};
+
+const getPresetDueDateValue = (preset) => {
+    const now = new Date();
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+
+    switch (preset) {
+        case 'today': {
+            const future = new Date(now.getTime() + 60 * 60 * 1000);
+            return toLocalDateTimeString(future);
+        }
+        case 'tomorrow': {
+            const target = new Date(now);
+            target.setDate(target.getDate() + 1);
+            target.setHours(9, 0, 0, 0);
+            return toLocalDateTimeString(target);
+        }
+        case 'next-week': {
+            const target = new Date(now);
+            target.setDate(target.getDate() + 7);
+            target.setHours(9, 0, 0, 0);
+            return toLocalDateTimeString(target);
+        }
+        default:
+            return '';
+    }
+};
 
 const COMMUNICATION_CHANNELS = [
     { value: 'email', label: 'Email' },
@@ -356,7 +439,7 @@ function Modal({ title, onClose, children, widthClass = 'max-w-2xl' }) {
     );
 }
 
-function Sidebar({ activePage, onSelect, onLogout, userEmail, clientsTotal }) {
+function Sidebar({ activePage, onSelect, onLogout, userEmail, clientsTotal, peruDateString }) {
     const displayName = userEmail ? userEmail.split('@')[0] : 'Usuario';
     const initials = getInitials(displayName);
     const [collapsed, setCollapsed] = useState(false);
@@ -381,6 +464,7 @@ function Sidebar({ activePage, onSelect, onLogout, userEmail, clientsTotal }) {
                             <p className="text-lg font-semibold text-[var(--swp-dark)]">SimpleWeb</p>
                             <p className="text-xs font-medium text-[var(--swp-dark)]/50">CRM • PYMEs</p>
                         </div>
+
                     )}
                 </div>
                 <button
@@ -440,6 +524,24 @@ function Sidebar({ activePage, onSelect, onLogout, userEmail, clientsTotal }) {
                     <LogOut className="h-4 w-4" />
                     {!collapsed && <span className="ml-2">Cerrar sesión</span>}
                 </button>
+                {collapsed ? (
+                    <div className="mt-4 flex justify-center">
+                        <div className="h-px w-8 rounded-full bg-slate-200" />
+                    </div>
+                ) : (
+                    <div className="mt-6">
+                        <div className="relative text-center text-[11px] text-slate-400">
+                            <span
+                                className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-slate-200 to-transparent"
+                                aria-hidden="true"
+                            />
+                            <span className="relative inline-flex items-center gap-2 bg-white px-3">
+                                <Clock className="h-3 w-3 text-slate-300" />
+                                <span className="font-medium">{`Perú • ${peruDateString}`}</span>
+                            </span>
+                        </div>
+                    </div>
+                )}
             </div>
         </aside>
     );
@@ -666,12 +768,29 @@ function DashboardPage({
         return Math.max(...funnelData.map((item) => item.value), 1);
     }, [funnelData]);
 
+    const [peruNow, setPeruNow] = useState(() => new Date());
+
+    useEffect(() => {
+        const interval = setInterval(() => setPeruNow(new Date()), 60_000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const peruDateString = useMemo(
+        () =>
+            new Intl.DateTimeFormat('es-PE', {
+                dateStyle: 'full',
+                timeZone: 'America/Lima',
+            }).format(peruNow),
+        [peruNow],
+    );
+
     return (
         <div className="page-content space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold text-slate-800">Dashboard</h2>
                     <p className="text-sm text-slate-500">Sigue tus tratos y clientes en un solo lugar</p>
+                    
                 </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -1515,6 +1634,117 @@ function DealModal({ deal, clients, onSubmit, onClose, onRequestCreateClient }) 
         onSubmit(form);
     };
 
+    const handleStageSelect = (stage) => {
+        setForm((prev) => ({ ...prev, stage }));
+    };
+
+    if (!isEdit) {
+        return (
+            <Modal title="Nuevo trato" onClose={onClose} widthClass="max-w-xl">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <section className="space-y-2">
+                        <p className="text-sm font-semibold text-slate-800">¿Cómo se llama el trato?</p>
+                        <input
+                            name="name"
+                            value={form.name}
+                            onChange={handleChange}
+                            required
+                            placeholder="Ej. Consultoría SEO TechCorp"
+                            className="w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                        />
+                    </section>
+
+                    <section className="space-y-2">
+                        <p className="text-xs font-medium text-[var(--swp-dark)]/60">Etapa del proceso</p>
+                        <div className="flex flex-wrap gap-2">
+                            {STAGE_ORDER.map((stage) => {
+                                const isActive = form.stage === stage;
+                                return (
+                                    <button
+                                        key={stage}
+                                        type="button"
+                                        onClick={() => handleStageSelect(stage)}
+                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                                            isActive
+                                                ? 'bg-[var(--swp-primary)] text-white shadow-sm'
+                                                : 'border border-[var(--swp-muted-border)] text-[var(--swp-dark)]/70 hover:border-[var(--swp-primary)]'
+                                        }`}
+                                    >
+                                        {stage}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </section>
+
+                    <section className="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <p className="text-xs font-medium text-[var(--swp-dark)]/60">Cliente</p>
+                            <select
+                                name="clientId"
+                                value={form.clientId != null ? String(form.clientId) : ''}
+                                onChange={handleChange}
+                                required
+                                className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] bg-white px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                            >
+                                <option value="">Selecciona un cliente</option>
+                                {clients.map((client) => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.firstName} {client.lastName}
+                                    </option>
+                                ))}
+                                <option value={CREATE_NEW_CLIENT_OPTION}>+ Crear cliente nuevo</option>
+                            </select>
+                            {needsClient && (
+                                <p className="mt-1 text-xs font-semibold text-rose-600">Selecciona un cliente para continuar.</p>
+                            )}
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium text-[var(--swp-dark)]/60">Valor estimado (S/)</p>
+                            <input
+                                type="number"
+                                min="0"
+                                name="value"
+                                value={form.value}
+                                onChange={handleChange}
+                                placeholder="0.00"
+                                className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                            />
+                        </div>
+                    </section>
+
+                    <section>
+                        <p className="text-xs font-medium text-[var(--swp-dark)]/60">Notas (opcional)</p>
+                        <textarea
+                            name="notes"
+                            value={form.notes}
+                            onChange={handleChange}
+                            rows={3}
+                            placeholder="Contexto, próximos pasos o acuerdos clave."
+                            className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                        />
+                    </section>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)]/70 hover:bg-[var(--swp-muted-card)]"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="rounded-lg bg-[var(--swp-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--swp-primary-hover)]"
+                        >
+                            Guardar trato
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+        );
+    }
+
     return (
         <Modal title={isEdit ? 'Editar trato' : 'Nuevo trato'} onClose={onClose}>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -1633,24 +1863,367 @@ function DealModal({ deal, clients, onSubmit, onClose, onRequestCreateClient }) 
 
 function TaskModal({ task, clients, deals, onSubmit, onClose }) {
     const isEdit = Boolean(task?.id);
-    const [form, setForm] = useState(
-        task || {
-            title: '',
-            description: '',
-            status: 'pendiente',
-            dueDate: '',
-            clientId: null,
-            dealId: null,
-        }
+    const [quickTaskType, setQuickTaskType] = useState(null);
+
+    const activeQuickOption = quickTaskType ? QUICK_TASK_OPTIONS.find((option) => option.value === quickTaskType) : null;
+    const modalTitle = activeQuickOption ? activeQuickOption.title : 'Crear Nueva Tarea';
+
+    const handleClose = () => {
+        setQuickTaskType(null);
+        onClose();
+    };
+
+    if (isEdit) {
+        return (
+            <Modal title="Editar tarea" onClose={handleClose}>
+                <EditTaskForm task={task} clients={clients} deals={deals} onSubmit={onSubmit} onClose={handleClose} />
+            </Modal>
+        );
+    }
+
+    return (
+        <Modal title={modalTitle} onClose={handleClose} widthClass={quickTaskType ? 'max-w-md' : 'max-w-sm'}>
+            <QuickTaskForm
+                taskType={quickTaskType}
+                onSelectType={setQuickTaskType}
+                onBack={() => setQuickTaskType(null)}
+                clients={clients}
+                deals={deals}
+                onSubmit={(payload) => {
+                    onSubmit(payload);
+                    setQuickTaskType(null);
+                }}
+                onClose={handleClose}
+            />
+        </Modal>
     );
+}
+
+function QuickTaskForm({
+    taskType,
+    onSelectType,
+    onBack,
+    clients = [],
+    deals = [],
+    onSubmit,
+    onClose,
+}) {
+    const [clientId, setClientId] = useState('');
+    const [dealId, setDealId] = useState('');
+    const [dueOption, setDueOption] = useState('today');
+    const [dueDate, setDueDate] = useState(() => getPresetDueDateValue('today'));
+    const [specificDate, setSpecificDate] = useState('');
+    const [customTitle, setCustomTitle] = useState('');
+    const [notes, setNotes] = useState('');
+    const [error, setError] = useState('');
+
+    const activeTask = taskType ? QUICK_TASK_OPTIONS.find((option) => option.value === taskType) : null;
+    const showForm = Boolean(activeTask);
+    const ActiveIconComponent = activeTask?.icon;
+
+    const resetFields = () => {
+        setClientId('');
+        setDealId('');
+        setDueOption('today');
+        setDueDate(getPresetDueDateValue('today'));
+        setSpecificDate('');
+        setNotes('');
+        setCustomTitle('');
+        setError('');
+    };
+
+    useEffect(() => {
+        resetFields();
+    }, [taskType]);
+
+    const availableDeals = useMemo(() => {
+        if (!clientId) {
+            return deals ?? [];
+        }
+        return (deals ?? []).filter((deal) => String(deal.clientId ?? '') === clientId);
+    }, [clientId, deals]);
+
+    const disableDealSelect = clientId ? availableDeals.length === 0 : (deals?.length ?? 0) === 0;
+    const notePlaceholder = taskType ? QUICK_TASK_NOTE_PLACEHOLDERS[taskType] : '';
+
+    const handleClientChange = (event) => {
+        const value = event.target.value;
+        setClientId(value);
+        setDealId('');
+    };
+
+    const handleDealChange = (event) => {
+        setDealId(event.target.value);
+    };
+
+    const handleDueOptionSelect = (value) => {
+        setDueOption(value);
+        setError('');
+        if (value === 'specific') {
+            setDueDate(specificDate);
+            return;
+        }
+        if (value === 'none') {
+            setDueDate('');
+            setSpecificDate('');
+            return;
+        }
+        const presetValue = getPresetDueDateValue(value);
+        setDueDate(presetValue);
+        setSpecificDate('');
+    };
+
+    const handleSpecificDateChange = (event) => {
+        const value = event.target.value;
+        setSpecificDate(value);
+        setDueDate(value);
+    };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        setError('');
+        if (!showForm || !activeTask) {
+            setError('Elige una acción para la tarea.');
+            return;
+        }
+        const finalTitle = taskType === 'other' ? customTitle.trim() : activeTask.defaultTitle || 'Nueva tarea';
+        if (!finalTitle) {
+            setError('Antes de guardar, asigna un título corto.');
+            return;
+        }
+        if (dueOption === 'specific' && !specificDate) {
+            setError('Elige la fecha y hora específicas.');
+            return;
+        }
+        onSubmit({
+            title: finalTitle,
+            description: notes.trim(),
+            status: 'pendiente',
+            dueDate: dueDate || null,
+            clientId: clientId ? Number(clientId) : null,
+            dealId: dealId ? Number(dealId) : null,
+        });
+    };
+
+    const handleSelectType = (value) => {
+        resetFields();
+        onSelectType(value);
+    };
+
+    const handleBackClick = () => {
+        resetFields();
+        onBack();
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-5">
+            {error && <p className="text-sm font-semibold text-rose-600">{error}</p>}
+
+            {!showForm && (
+                <>
+                    <section className="space-y-3">
+                        <p className="text-sm font-semibold text-slate-800">¿Qué acción deseas registrar?</p>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            {QUICK_TASK_OPTIONS.map((option) => {
+                                const IconComponent = option.icon;
+                                return (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => handleSelectType(option.value)}
+                                        className="flex flex-col items-center justify-center gap-2 rounded-xl border border-[var(--swp-muted-border)] bg-white px-4 py-5 text-sm font-semibold text-[var(--swp-dark)]/80 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--swp-primary)]/40 hover:text-[var(--swp-primary)]"
+                                    >
+                                        <IconComponent className="h-6 w-6" />
+                                        <span className="tracking-wide">{option.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </section>
+                    <div className="flex justify-end pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)]/70 hover:bg-[var(--swp-muted-card)]"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </>
+            )}
+
+            {showForm && activeTask && (
+                <>
+                    <div className="flex items-center justify-between">
+                        <button
+                            type="button"
+                            onClick={handleBackClick}
+                            className="flex items-center gap-1 text-sm font-semibold text-[var(--swp-primary)] hover:text-[var(--swp-primary-hover)]"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                            Volver
+                        </button>
+                        <div className="flex flex-col items-center">
+                            <span className="text-xs font-semibold uppercase text-[var(--swp-dark)]/40">Acción</span>
+                            <h3 className="text-base font-semibold text-slate-800">
+                                {taskType === 'other' ? 'Nueva tarea' : activeTask.title}
+                            </h3>
+                        </div>
+                        <span className="w-8" aria-hidden="true" />
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-xl border border-[var(--swp-muted-border)] bg-[var(--swp-muted-card)]/60 px-4 py-3 shadow-inner">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-white text-[var(--swp-primary)] shadow-sm">
+                            {ActiveIconComponent && <ActiveIconComponent className="h-6 w-6" />}
+                        </span>
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--swp-dark)]/40">Acción seleccionada</p>
+                            <p className="text-sm font-semibold text-[var(--swp-dark)]">{activeTask.label}</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 rounded-xl border border-[var(--swp-muted-border)] bg-white px-4 py-4 shadow-sm">
+                        {taskType === 'other' && (
+                            <div>
+                                <label className="text-xs font-medium text-[var(--swp-dark)]/60">Título de la tarea</label>
+                                <input
+                                    value={customTitle}
+                                onChange={(event) => setCustomTitle(event.target.value)}
+                                placeholder="Ponle un nombre rápido"
+                                className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                            />
+                        </div>
+                    )}
+
+                    <section className="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label className="text-xs font-semibold text-[var(--swp-dark)]/60">Cliente</label>
+                            <select
+                                value={clientId}
+                                onChange={handleClientChange}
+                                className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] bg-white px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                            >
+                                <option value="">Sin cliente</option>
+                                {clients.map((client) => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.firstName} {client.lastName}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-[var(--swp-dark)]/60">Trato</label>
+                            <select
+                                value={dealId}
+                                onChange={handleDealChange}
+                                disabled={disableDealSelect}
+                                className={`mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] bg-white px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)] ${
+                                    disableDealSelect ? 'opacity-60' : ''
+                                }`}
+                            >
+                                <option value="">Sin trato</option>
+                                {(clientId ? availableDeals : deals ?? []).map((deal) => (
+                                    <option key={deal.id} value={deal.id}>
+                                        {deal.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </section>
+
+                    <section className="space-y-2">
+                        <label className="text-xs font-semibold text-[var(--swp-dark)]/60">Fecha de vencimiento</label>
+                        <div className="flex flex-wrap gap-2">
+                            {QUICK_TASK_DUE_OPTIONS.map((option) => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => handleDueOptionSelect(option.value)}
+                                    className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+                                        dueOption === option.value
+                                            ? 'border-[var(--swp-primary)] bg-[var(--swp-primary-soft)] text-[var(--swp-primary)]'
+                                            : 'border-[var(--swp-muted-border)] text-[var(--swp-dark)]/70 hover:border-[var(--swp-primary)]/40'
+                                    }`}
+                                >
+                                    {option.withIcon && <Calendar className="h-4 w-4" />}
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                        {dueOption === 'specific' && (
+                            <input
+                                type="datetime-local"
+                                value={specificDate}
+                                onChange={handleSpecificDateChange}
+                                className="w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                            />
+                        )}
+                    </section>
+
+                    <section>
+                        <label className="text-xs font-semibold text-[var(--swp-dark)]/60">Notas (opcional)</label>
+                        <textarea
+                            rows={3}
+                            value={notes}
+                            onChange={(event) => setNotes(event.target.value)}
+                            placeholder={notePlaceholder}
+                            className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                        />
+                    </section>
+
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-1">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)]/70 hover:bg-[var(--swp-muted-card)]"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="rounded-lg bg-[var(--swp-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--swp-primary-hover)]"
+                        >
+                            Guardar tarea
+                        </button>
+                    </div>
+                </>
+            )}
+        </form>
+    );
+}
+
+function EditTaskForm({ task, clients = [], deals = [], onSubmit, onClose }) {
+    const [form, setForm] = useState({
+        id: task?.id,
+        title: task?.title || '',
+        description: task?.description || '',
+        status: task?.status || 'pendiente',
+        dueDate: task?.dueDate || '',
+        clientId: task?.clientId || null,
+        dealId: task?.dealId || null,
+    });
+
+    useEffect(() => {
+        setForm({
+            id: task?.id,
+            title: task?.title || '',
+            description: task?.description || '',
+            status: task?.status || 'pendiente',
+            dueDate: task?.dueDate || '',
+            clientId: task?.clientId || null,
+            dealId: task?.dealId || null,
+        });
+    }, [task]);
 
     const handleChange = (event) => {
         const { name, value } = event.target;
         if (name === 'clientId' || name === 'dealId') {
             setForm((prev) => ({ ...prev, [name]: value ? Number(value) : null }));
-        } else {
-            setForm((prev) => ({ ...prev, [name]: value }));
+            return;
         }
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (event) => {
@@ -1659,106 +2232,104 @@ function TaskModal({ task, clients, deals, onSubmit, onClose }) {
     };
 
     return (
-        <Modal title={isEdit ? 'Editar tarea' : 'Nueva tarea'} onClose={onClose}>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label className="text-xs font-semibold uppercase text-slate-500">Título</label>
+                <input
+                    name="title"
+                    value={form.title}
+                    onChange={handleChange}
+                    required
+                    className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                />
+            </div>
+            <div>
+                <label className="text-xs font-semibold uppercase text-slate-500">Descripción</label>
+                <textarea
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    rows={3}
+                    className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                    <label className="text-xs font-semibold uppercase text-slate-500">Título</label>
+                    <label className="text-xs font-semibold uppercase text-slate-500">Estado</label>
+                    <select
+                        name="status"
+                        value={form.status}
+                        onChange={handleChange}
+                        className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                    >
+                        {TASK_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="text-xs font-semibold uppercase text-slate-500">Fecha y hora</label>
                     <input
-                        name="title"
-                        value={form.title}
-                        onChange={handleChange}
-                        required
+                        type="datetime-local"
+                        name="dueDate"
+                        value={toDateTimeInputValue(form.dueDate)}
+                        onChange={(event) => setForm((prev) => ({ ...prev, dueDate: event.target.value }))}
                         className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
                     />
+                </div>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label className="text-xs font-semibold uppercase text-slate-500">Cliente</label>
+                    <select
+                        name="clientId"
+                        value={form.clientId || ''}
+                        onChange={handleChange}
+                        className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                    >
+                        <option value="">Sin cliente</option>
+                        {clients.map((client) => (
+                            <option key={client.id} value={client.id}>
+                                {client.firstName} {client.lastName}
+                            </option>
+                        ))}
+                    </select>
                 </div>
                 <div>
-                    <label className="text-xs font-semibold uppercase text-slate-500">Descripción</label>
-                    <textarea
-                        name="description"
-                        value={form.description}
+                    <label className="text-xs font-semibold uppercase text-slate-500">Trato</label>
+                    <select
+                        name="dealId"
+                        value={form.dealId || ''}
                         onChange={handleChange}
-                        rows={3}
                         className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
-                    />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                        <label className="text-xs font-semibold uppercase text-slate-500">Estado</label>
-                        <select
-                            name="status"
-                            value={form.status}
-                            onChange={handleChange}
-                            className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
-                        >
-                            {TASK_STATUS_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="text-xs font-semibold uppercase text-slate-500">Fecha y hora</label>
-                        <input
-                            type="datetime-local"
-                            name="dueDate"
-                            value={toDateTimeInputValue(form.dueDate)}
-                            onChange={(event) => setForm((prev) => ({ ...prev, dueDate: event.target.value }))}
-                            className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
-                        />
-                    </div>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                        <label className="text-xs font-semibold uppercase text-slate-500">Cliente</label>
-                        <select
-                            name="clientId"
-                            value={form.clientId || ''}
-                            onChange={handleChange}
-                            className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
-                        >
-                            <option value="">Sin cliente</option>
-                            {clients.map((client) => (
-                                <option key={client.id} value={client.id}>
-                                    {client.firstName} {client.lastName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="text-xs font-semibold uppercase text-slate-500">Trato</label>
-                        <select
-                            name="dealId"
-                            value={form.dealId || ''}
-                            onChange={handleChange}
-                            className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
-                        >
-                            <option value="">Sin trato</option>
-                            {deals.map((deal) => (
-                                <option key={deal.id} value={deal.id}>
-                                    {deal.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                <div className="flex justify-end gap-3 pt-2">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)] opacity-80 hover:bg-[var(--swp-muted-card)]"
                     >
-                        Cancelar
-                    </button>
-                    <button
-                        type="submit"
-                        className="rounded-lg bg-[var(--swp-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--swp-primary-hover)]"
-                    >
-                        {isEdit ? 'Guardar cambios' : 'Crear tarea'}
-                    </button>
+                        <option value="">Sin trato</option>
+                        {deals.map((deal) => (
+                            <option key={deal.id} value={deal.id}>
+                                {deal.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-            </form>
-        </Modal>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)] opacity-80 hover:bg-[var(--swp-muted-card)]"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="submit"
+                    className="rounded-lg bg-[var(--swp-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--swp-primary-hover)]"
+                >
+                    Guardar cambios
+                </button>
+            </div>
+        </form>
     );
 }
 
@@ -1894,6 +2465,21 @@ function App() {
     const [clientSearch, setClientSearch] = useState('');
     const [modalState, setModalState] = useState({ type: null, data: null });
     const [pendingAction, setPendingAction] = useState(null);
+    const [peruNow, setPeruNow] = useState(() => new Date());
+
+    useEffect(() => {
+        const interval = setInterval(() => setPeruNow(new Date()), 60_000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const peruDateString = useMemo(
+        () =>
+            new Intl.DateTimeFormat('es-PE', {
+                dateStyle: 'full',
+                timeZone: 'America/Lima',
+            }).format(peruNow),
+        [peruNow],
+    );
 
     const handleAuthSuccess = (tokenValue, emailValue) => {
         localStorage.setItem('crm_token', tokenValue);
@@ -2292,6 +2878,7 @@ function App() {
                 onLogout={handleLogout}
                 userEmail={userEmail}
                 clientsTotal={clients.length}
+                peruDateString={peruDateString}
             />
             <div className="flex flex-1 flex-col overflow-hidden">
                 <MobileNav activePage={activePage} onSelect={setActivePage} onLogout={handleLogout} />

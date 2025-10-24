@@ -8,6 +8,12 @@ const createPool = () =>
 
 const pool = createPool();
 
+pool.on('connect', (client) => {
+    client.query("SET TIME ZONE 'America/Lima'").catch((error) => {
+        console.error('No se pudo establecer la zona horaria de la base de datos:', error.message);
+    });
+});
+
 const initializeDatabase = async () => {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS users (
