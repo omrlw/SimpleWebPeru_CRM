@@ -86,7 +86,7 @@ const TASK_STATUS_OPTIONS = [
 const QUICK_TASK_OPTIONS = [
     {
         value: 'call',
-        label: 'Llamar',
+        label: 'Comunicarse',
         title: 'Registrar llamada',
         defaultTitle: 'Llamada de seguimiento',
         icon: Phone,
@@ -1726,13 +1726,13 @@ function DealModal({ deal, clients, onSubmit, onClose, onRequestCreateClient }) 
                     </section>
 
                     <div className="flex justify-end gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)]/70 hover:bg-[var(--swp-muted-card)]"
-                        >
-                            Cancelar
-                        </button>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)] opacity-80 hover:bg-[var(--swp-muted-card)]"
+                    >
+                        Cancelar
+                    </button>
                         <button
                             type="submit"
                             className="rounded-lg bg-[var(--swp-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--swp-primary-hover)]"
@@ -1864,6 +1864,7 @@ function DealModal({ deal, clients, onSubmit, onClose, onRequestCreateClient }) 
 function TaskModal({ task, clients, deals, onSubmit, onClose }) {
     const isEdit = Boolean(task?.id);
     const [quickTaskType, setQuickTaskType] = useState(null);
+    const STANDARD_MODAL_WIDTH = 'max-w-lg';
 
     const activeQuickOption = quickTaskType ? QUICK_TASK_OPTIONS.find((option) => option.value === quickTaskType) : null;
     const modalTitle = activeQuickOption ? activeQuickOption.title : 'Crear Nueva Tarea';
@@ -1875,14 +1876,14 @@ function TaskModal({ task, clients, deals, onSubmit, onClose }) {
 
     if (isEdit) {
         return (
-            <Modal title="Editar tarea" onClose={handleClose}>
+            <Modal title="Editar tarea" onClose={handleClose} widthClass={STANDARD_MODAL_WIDTH}>
                 <EditTaskForm task={task} clients={clients} deals={deals} onSubmit={onSubmit} onClose={handleClose} />
             </Modal>
         );
     }
 
     return (
-        <Modal title={modalTitle} onClose={handleClose} widthClass={quickTaskType ? 'max-w-md' : 'max-w-sm'}>
+        <Modal title={modalTitle} onClose={handleClose} widthClass={STANDARD_MODAL_WIDTH}>
             <QuickTaskForm
                 taskType={quickTaskType}
                 onSelectType={setQuickTaskType}
@@ -2019,11 +2020,16 @@ function QuickTaskForm({
         <form onSubmit={handleSubmit} className="space-y-5">
             {error && <p className="text-sm font-semibold text-rose-600">{error}</p>}
 
-            {!showForm && (
-                <>
-                    <section className="space-y-3">
-                        <p className="text-sm font-semibold text-slate-800">¿Qué acción deseas registrar?</p>
-                        <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-xl">
+                {!showForm && (
+                    <>
+                        <header className="space-y-1 text-center">
+                            <h3 className="text-lg font-semibold text-slate-900">Elige una acción rápida</h3>
+                            <p className="text-sm text-slate-500">
+                                Selecciona el tipo de actividad para mantener el mismo estilo al completar la tarea.
+                            </p>
+                        </header>
+                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
                             {QUICK_TASK_OPTIONS.map((option) => {
                                 const IconComponent = option.icon;
                                 return (
@@ -2031,165 +2037,157 @@ function QuickTaskForm({
                                         key={option.value}
                                         type="button"
                                         onClick={() => handleSelectType(option.value)}
-                                        className="flex flex-col items-center justify-center gap-2 rounded-xl border border-[var(--swp-muted-border)] bg-white px-4 py-5 text-sm font-semibold text-[var(--swp-dark)]/80 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--swp-primary)]/40 hover:text-[var(--swp-primary)]"
+                                        className="group flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--swp-primary)]/50 hover:bg-[var(--swp-muted-card)]"
                                     >
-                                        <IconComponent className="h-6 w-6" />
+                                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--swp-muted-card)] text-[var(--swp-primary)] shadow-inner transition group-hover:bg-white">
+                                            <IconComponent className="h-5 w-5" />
+                                        </span>
                                         <span className="tracking-wide">{option.label}</span>
                                     </button>
                                 );
                             })}
                         </div>
-                    </section>
-                    <div className="flex justify-end pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)]/70 hover:bg-[var(--swp-muted-card)]"
-                        >
-                            Cancelar
-                        </button>
-                    </div>
-                </>
-            )}
-
-            {showForm && activeTask && (
-                <>
-                    <div className="flex items-center justify-between">
-                        <button
-                            type="button"
-                            onClick={handleBackClick}
-                            className="flex items-center gap-1 text-sm font-semibold text-[var(--swp-primary)] hover:text-[var(--swp-primary-hover)]"
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Volver
-                        </button>
-                        <div className="flex flex-col items-center">
-                            <span className="text-xs font-semibold uppercase text-[var(--swp-dark)]/40">Acción</span>
-                            <h3 className="text-base font-semibold text-slate-800">
-                                {taskType === 'other' ? 'Nueva tarea' : activeTask.title}
-                            </h3>
-                        </div>
-                        <span className="w-8" aria-hidden="true" />
-                    </div>
-
-                    <div className="flex items-center gap-3 rounded-xl border border-[var(--swp-muted-border)] bg-[var(--swp-muted-card)]/60 px-4 py-3 shadow-inner">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-white text-[var(--swp-primary)] shadow-sm">
-                            {ActiveIconComponent && <ActiveIconComponent className="h-6 w-6" />}
-                        </span>
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--swp-dark)]/40">Acción seleccionada</p>
-                            <p className="text-sm font-semibold text-[var(--swp-dark)]">{activeTask.label}</p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 rounded-xl border border-[var(--swp-muted-border)] bg-white px-4 py-4 shadow-sm">
-                        {taskType === 'other' && (
-                            <div>
-                                <label className="text-xs font-medium text-[var(--swp-dark)]/60">Título de la tarea</label>
-                                <input
-                                    value={customTitle}
-                                onChange={(event) => setCustomTitle(event.target.value)}
-                                placeholder="Ponle un nombre rápido"
-                                className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
-                            />
-                        </div>
-                    )}
-
-                    <section className="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <label className="text-xs font-semibold text-[var(--swp-dark)]/60">Cliente</label>
-                            <select
-                                value={clientId}
-                                onChange={handleClientChange}
-                                className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] bg-white px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
                             >
-                                <option value="">Sin cliente</option>
-                                {clients.map((client) => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.firstName} {client.lastName}
-                                    </option>
-                                ))}
-                            </select>
+                                Cancelar
+                            </button>
                         </div>
-                        <div>
-                            <label className="text-xs font-semibold text-[var(--swp-dark)]/60">Trato</label>
-                            <select
-                                value={dealId}
-                                onChange={handleDealChange}
-                                disabled={disableDealSelect}
-                                className={`mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] bg-white px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)] ${
-                                    disableDealSelect ? 'opacity-60' : ''
-                                }`}
+                    </>
+                )}
+
+                {showForm && activeTask && (
+                    <>
+                        <div className="flex items-center justify-between gap-2 rounded-xl bg-[var(--swp-muted-card)] px-4 py-3">
+                            <button
+                                type="button"
+                                onClick={handleBackClick}
+                                className="flex items-center gap-1 text-sm font-semibold text-[var(--swp-primary)] transition-colors hover:text-[var(--swp-primary-hover)]"
                             >
-                                <option value="">Sin trato</option>
-                                {(clientId ? availableDeals : deals ?? []).map((deal) => (
-                                    <option key={deal.id} value={deal.id}>
-                                        {deal.name}
-                                    </option>
-                                ))}
-                            </select>
+                                <ChevronLeft className="h-4 w-4" />
+                                Volver
+                            </button>
+                            <div className="flex flex-col items-center">
+                                <span className="text-xs font-semibold uppercase text-[var(--swp-dark)]/40">Acción</span>
+                                <div className="flex items-center gap-2 text-base font-semibold text-slate-800">
+                                    {ActiveIconComponent && <ActiveIconComponent className="h-5 w-5 text-[var(--swp-primary)]" />}
+                                    <span>{taskType === 'other' ? 'Nueva tarea' : activeTask.title}</span>
+                                </div>
+                            </div>
+                            <span className="w-10" aria-hidden="true" />
                         </div>
-                    </section>
 
-                    <section className="space-y-2">
-                        <label className="text-xs font-semibold text-[var(--swp-dark)]/60">Fecha de vencimiento</label>
-                        <div className="flex flex-wrap gap-2">
-                            {QUICK_TASK_DUE_OPTIONS.map((option) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={() => handleDueOptionSelect(option.value)}
-                                    className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
-                                        dueOption === option.value
-                                            ? 'border-[var(--swp-primary)] bg-[var(--swp-primary-soft)] text-[var(--swp-primary)]'
-                                            : 'border-[var(--swp-muted-border)] text-[var(--swp-dark)]/70 hover:border-[var(--swp-primary)]/40'
-                                    }`}
-                                >
-                                    {option.withIcon && <Calendar className="h-4 w-4" />}
-                                    {option.label}
-                                </button>
-                            ))}
+                        <div className="mt-5 space-y-4">
+                            {taskType === 'other' && (
+                                <div>
+                                    <label className="text-sm font-medium text-slate-700">Título de la tarea</label>
+                                    <input
+                                        value={customTitle}
+                                        onChange={(event) => setCustomTitle(event.target.value)}
+                                        placeholder="Ponle un nombre rápido"
+                                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                    />
+                                </div>
+                            )}
+
+                            <section className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="text-sm font-medium text-slate-700">Cliente asociado</label>
+                                    <select
+                                        value={clientId}
+                                        onChange={handleClientChange}
+                                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                    >
+                                        <option value="">Sin cliente</option>
+                                        {clients.map((client) => (
+                                            <option key={client.id} value={client.id}>
+                                                {client.firstName} {client.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-slate-700">Trato (opcional)</label>
+                                    <select
+                                        value={dealId}
+                                        onChange={handleDealChange}
+                                        disabled={disableDealSelect}
+                                        className={`mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-100 ${
+                                            disableDealSelect ? 'opacity-60' : ''
+                                        }`}
+                                    >
+                                        <option value="">Sin trato</option>
+                                        {(clientId ? availableDeals : deals ?? []).map((deal) => (
+                                            <option key={deal.id} value={deal.id}>
+                                                {deal.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </section>
+
+                            <section className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700">Fecha</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {QUICK_TASK_DUE_OPTIONS.map((option) => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => handleDueOptionSelect(option.value)}
+                                            className={`flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+                                                dueOption === option.value
+                                                    ? 'bg-[var(--swp-primary)] text-white shadow-sm'
+                                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            {option.withIcon && <Calendar className="h-4 w-4" />}
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                {dueOption === 'specific' && (
+                                    <input
+                                        type="datetime-local"
+                                        value={specificDate}
+                                        onChange={handleSpecificDateChange}
+                                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                    />
+                                )}
+                            </section>
+
+                            <section>
+                                <label className="text-sm font-medium text-slate-700">Notas (opcional)</label>
+                                <textarea
+                                    rows={3}
+                                    value={notes}
+                                    onChange={(event) => setNotes(event.target.value)}
+                                    placeholder={notePlaceholder}
+                                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                />
+                            </section>
                         </div>
-                        {dueOption === 'specific' && (
-                            <input
-                                type="datetime-local"
-                                value={specificDate}
-                                onChange={handleSpecificDateChange}
-                                className="w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
-                            />
-                        )}
-                    </section>
 
-                    <section>
-                        <label className="text-xs font-semibold text-[var(--swp-dark)]/60">Notas (opcional)</label>
-                        <textarea
-                            rows={3}
-                            value={notes}
-                            onChange={(event) => setNotes(event.target.value)}
-                            placeholder={notePlaceholder}
-                            className="mt-1 w-full rounded-lg border border-[var(--swp-muted-border)] px-3 py-2 text-sm focus:border-[var(--swp-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--swp-muted-card)]"
-                        />
-                    </section>
-
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-1">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="rounded-lg border border-[var(--swp-muted-border)] px-4 py-2 text-sm font-medium text-[var(--swp-dark)]/70 hover:bg-[var(--swp-muted-card)]"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            className="rounded-lg bg-[var(--swp-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--swp-primary-hover)]"
-                        >
-                            Guardar tarea
-                        </button>
-                    </div>
-                </>
-            )}
+                        <div className="mt-6 flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                className="rounded-lg bg-[var(--swp-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--swp-primary-hover)]"
+                            >
+                                Crear tarea
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
         </form>
     );
 }
