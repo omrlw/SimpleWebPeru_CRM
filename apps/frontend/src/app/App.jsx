@@ -2020,16 +2020,10 @@ function QuickTaskForm({
         <form onSubmit={handleSubmit} className="space-y-5">
             {error && <p className="text-sm font-semibold text-rose-600">{error}</p>}
 
-            <div className="rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-xl">
+            <div className="h-[26rem] overflow-y-auto rounded-2xl bg-white px-6 py-6 shadow-xl">
                 {!showForm && (
-                    <>
-                        <header className="space-y-1 text-center">
-                            <h3 className="text-lg font-semibold text-slate-900">Elige una acción rápida</h3>
-                            <p className="text-sm text-slate-500">
-                                Selecciona el tipo de actividad para mantener el mismo estilo al completar la tarea.
-                            </p>
-                        </header>
-                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div className="flex h-full flex-col items-center justify-center gap-6">
+                        <div className="grid w-full max-w-md gap-4 sm:grid-cols-2">
                             {QUICK_TASK_OPTIONS.map((option) => {
                                 const IconComponent = option.icon;
                                 return (
@@ -2037,9 +2031,9 @@ function QuickTaskForm({
                                         key={option.value}
                                         type="button"
                                         onClick={() => handleSelectType(option.value)}
-                                        className="group flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-medium text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--swp-primary)]/50 hover:bg-[var(--swp-muted-card)]"
+                                        className="group flex w-full flex-col items-center justify-center gap-2 rounded-2xl bg-[var(--swp-muted-card)] px-6 py-8 text-sm font-semibold text-slate-700 transition-transform duration-150 hover:-translate-y-1 hover:bg-white hover:text-[var(--swp-primary)] hover:shadow-lg"
                                     >
-                                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--swp-muted-card)] text-[var(--swp-primary)] shadow-inner transition group-hover:bg-white">
+                                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[var(--swp-primary)] shadow-md transition group-hover:bg-[var(--swp-muted-card)]">
                                             <IconComponent className="h-5 w-5" />
                                         </span>
                                         <span className="tracking-wide">{option.label}</span>
@@ -2047,21 +2041,12 @@ function QuickTaskForm({
                                 );
                             })}
                         </div>
-                        <div className="mt-6 flex justify-end">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100"
-                            >
-                                Cancelar
-                            </button>
-                        </div>
-                    </>
+                    </div>
                 )}
 
                 {showForm && activeTask && (
                     <>
-                        <div className="flex items-center justify-between gap-2 rounded-xl bg-[var(--swp-muted-card)] px-4 py-3">
+                        <div className="flex items-center justify-between pb-3">
                             <button
                                 type="button"
                                 onClick={handleBackClick}
@@ -2080,7 +2065,7 @@ function QuickTaskForm({
                             <span className="w-10" aria-hidden="true" />
                         </div>
 
-                        <div className="mt-5 space-y-4">
+                        <div className="pt-5 space-y-4">
                             {taskType === 'other' && (
                                 <div>
                                     <label className="text-sm font-medium text-slate-700">Título de la tarea</label>
